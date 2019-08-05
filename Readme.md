@@ -8,6 +8,7 @@ DESCRIPTION
 
 usage
 
+	$ go get github.com/skubota/4o6top
 	$ tcpdump -l -w - 'ip6' | 4o6top
 
 option
