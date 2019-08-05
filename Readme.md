@@ -2,8 +2,6 @@
 
 IPv4 over IPv6 network top(4o6top)
 
-===================
-
 ## DESCRIPTION
 
 4o6top is a simple tool to track the session information of IPv4 packets on IPv6
