@@ -6,6 +6,7 @@ DESCRIPTION
 4o6top is a simple tool to track the session information of IPv4 packets on IPv6
 
 requrement
+
 	libpcap
 	(libpcap-devel)
 
