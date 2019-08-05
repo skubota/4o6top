@@ -7,8 +7,7 @@ DESCRIPTION
 
 requrement
 
-	libpcap
-	(libpcap-devel)
+ libpcap (libpcap-devel)
 
 usage
 
