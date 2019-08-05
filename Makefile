@@ -13,6 +13,12 @@ build:
 install:
 	go install -ldflags=$(BUILD_LDFLAGS) 
 
+.PHONY: deps
+deps:
+	go get github.com/google/gopacket
+	go get github.com/google/gopacket/layers
+	go get github.com/google/gopacket/pcap
+
 .PHONY: lint
 lint: $(GOBIN)/golint
 	go vet 
