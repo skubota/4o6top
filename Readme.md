@@ -1,20 +1,24 @@
+# 4o6top
+
 IPv4 over IPv6 network top(4o6top)
+
 ===================
 
-DESCRIPTION
+## DESCRIPTION
 
 4o6top is a simple tool to track the session information of IPv4 packets on IPv6
 
-requrement
+### requrement
 
  libpcap (libpcap-devel)
 
-usage
+### usage
 
 	$ go get github.com/skubota/4o6top
 	$ tcpdump -l -w - 'ip6' | 4o6top
 
-option
+### option
+
 ```
   -h int
     	height (default 30)
@@ -25,3 +29,7 @@ option
   -t int
     	entry view ttl (default 3)
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
