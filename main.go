@@ -18,12 +18,12 @@ import (
 var (
 	pcapFile = flag.String("r", "-", "Read pcap file")
 	interval = flag.Int("i", 1, "reflesh interval")
-	initTTL = flag.Int("t", 3, "entry view ttl")
+	initTTL  = flag.Int("t", 3, "entry view ttl")
 	height   = flag.Int("h", 30, "height")
 
 	sortKey = make(map[int]string)
-	handle   *pcap.Handle
-	err      error
+	handle  *pcap.Handle
+	err     error
 )
 
 type maps struct {
@@ -41,8 +41,8 @@ func printSessionTable(h int) {
 	tmp := mymap.sess
 	mymap.Unlock()
 	for k, v := range tmp {
-		var pkt int64 
-		var byte int64 
+		var pkt int64
+		var byte int64
 		var ttl int64
 		if len(v) > 0 {
 			val := strings.Split(v, ",")
@@ -56,8 +56,8 @@ func printSessionTable(h int) {
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
 			}
 
-			ttl-- 
-			h-- 
+			ttl--
+			h--
 
 			mymap.Lock()
 			mymap.sess[k] = fmt.Sprintf("%d,%d,%d", pkt, byte, ttl)
@@ -89,7 +89,7 @@ func capturePacket(packet gopacket.Packet) {
 			var (
 				SrcPort, DstPort int
 			)
-			var Length int64 
+			var Length int64
 			nl := packet.Layer(layers.LayerTypeIPv4)
 			ip4, _ := nl.(*layers.IPv4)
 
@@ -99,27 +99,36 @@ func capturePacket(packet gopacket.Packet) {
 			if ip4.Protocol == layers.IPProtocolTCP {
 				Proto = "TCP"
 				tl := packet.Layer(layers.LayerTypeTCP)
-				tcp, _ := tl.(*layers.TCP)
+				tcp, ret := tl.(*layers.TCP)
+				if ret == false {
+					return
+				}
 				SrcPort = int(tcp.SrcPort)
 				DstPort = int(tcp.DstPort)
 			}
 			if ip4.Protocol == layers.IPProtocolUDP {
 				Proto = "UDP"
 				ul := packet.Layer(layers.LayerTypeUDP)
-				udp, _ := ul.(*layers.UDP)
+				udp, ret := ul.(*layers.UDP)
+				if ret == false {
+					return
+				}
 				SrcPort = int(udp.SrcPort)
 				DstPort = int(udp.DstPort)
 			}
 			if ip4.Protocol == layers.IPProtocolICMPv4 {
 				Proto = "ICMP"
 				il := packet.Layer(layers.LayerTypeICMPv4)
-				icmp, _ := il.(*layers.ICMPv4)
+				icmp, ret := il.(*layers.ICMPv4)
+				if ret == false {
+					return
+				}
 				SrcPort = int(icmp.Id)
 				DstPort = int(icmp.Id)
 			}
 			entry := fmt.Sprintf("%6s %15s:%5d -> %15s:%5d", Proto, SrcIP, SrcPort, DstIP, DstPort)
 
-			var pkt int64 
+			var pkt int64
 			var byte int64
 			var ttl = int64(*initTTL)
 
@@ -133,7 +142,7 @@ func capturePacket(packet gopacket.Packet) {
 				pkt, _ = strconv.ParseInt(val[0], 10, 64)
 				byte, _ = strconv.ParseInt(val[1], 10, 64)
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
-				ttl++ 
+				ttl++
 			}
 			mymap.Lock()
 			mymap.sess[entry] = fmt.Sprintf("%d,%d,%d", pkt+1, byte+Length, ttl)
