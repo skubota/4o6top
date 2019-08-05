@@ -36,7 +36,7 @@ var mymap = maps{
 }
 
 func printSessionTable(h int) {
-	fmt.Printf("\033[H\033[2J%6s %15s:%5s -> %15s:%5s %10s %10s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packet", "Bytes")
+	fmt.Printf("\033[H\033[2J%6s %15s:%5s -> %15s:%5s %10s %10s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packets", "Bytes")
 	mymap.Lock()
 	tmp := mymap.sess
 	mymap.Unlock()
