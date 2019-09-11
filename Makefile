@@ -1,6 +1,9 @@
 BIN := 4o6top
-BUILD_LDFLAGS := ""
 GOBIN ?= $(shell go env GOPATH)/bin
+
+VERSION := 0.1
+MINVER  :=$(shell date -u +.%Y%m%d)
+BUILD_LDFLAGS := "-X main.Version=$(VERSION)$(MINVER)" 
 
 .PHONY: all
 all: clean build
@@ -21,6 +24,7 @@ deps:
 
 .PHONY: lint
 lint: $(GOBIN)/golint
+	go fmt
 	go vet 
 	$(GOBIN)/golint -set_exit_status 
 
