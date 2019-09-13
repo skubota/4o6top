@@ -21,7 +21,7 @@ var Version string
 // Name of PROG
 var Name string
 
-// option struct
+// Options struct for option
 type Options struct {
 	srcIP    *string
 	pcapFile *string
@@ -31,7 +31,7 @@ type Options struct {
 	stat     *bool
 }
 
-// map struct
+// map struct for session map
 type maps struct {
 	sync.Mutex
 	sess        map[string]string
@@ -49,7 +49,7 @@ type maps struct {
 	dstipICMP   map[string]int
 }
 
-// mymap
+// mymap session gloval var
 var mymap = maps{
 	sess:        map[string]string{},
 	sessionTCP:  0,
