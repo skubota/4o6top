@@ -16,7 +16,7 @@ IPv4 over IPv6 network top(4o6top)
 ### usage
 
 	$ go get github.com/skubota/4o6top
-	$ tcpdump -l -w - 'ip6' | 4o6top
+	$ tcpdump -i eth0 -l -w - 'ip6' | 4o6top -s xxx.xxx.xxx.xxx -h 30 -t 10 -i 1
 
 ### option
 
