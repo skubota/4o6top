@@ -16,10 +16,10 @@ import (
 )
 
 // Version of PROG
-var Version string
+var Version string = "0.2"
 
 // Name of PROG
-var Name string
+var Name string = "4o6top"
 
 // Options struct for option
 type Options struct {
