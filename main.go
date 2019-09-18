@@ -16,10 +16,10 @@ import (
 )
 
 // Version of PROG
-var Version string = "0.2"
+var Version = "0.2"
 
 // Name of PROG
-var Name string = "4o6top"
+var Name = "4o6top"
 
 // Options struct for option
 type Options struct {
@@ -101,11 +101,15 @@ func printSessionTable(opt Options) {
 			h--
 
 			if ttl > 0 {
+				mymap.Lock()
 				mymap.sess[k] = fmt.Sprintf("%d,%d,%d", pkt, byte, ttl)
+				mymap.Unlock()
 				fmt.Printf("%s %10d %10d %5d\n", k, pkt, byte, ttl)
 
 			} else {
+				mymap.Lock()
 				delete(mymap.sess, k)
+				mymap.Unlock()
 			}
 
 		}
@@ -141,7 +145,6 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				rev = true
 			}
 			Length = int64(ip6.Length)
-			mymap.Lock()
 			if ip4.Protocol == layers.IPProtocolTCP {
 				Proto = "TCP"
 				tl := packet.Layer(layers.LayerTypeTCP)
@@ -156,10 +159,12 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					SrcPort = int(tcp.SrcPort)
 					DstPort = int(tcp.DstPort)
 				}
+				mymap.Lock()
 				mymap.dstipTCP[DstIP] = 1
 				mymap.dstportTCP[DstPort] = 1
 				mymap.srcportTCP[SrcPort] = 1
 				mymap.sessionTCP++
+				mymap.Unlock()
 			}
 			if ip4.Protocol == layers.IPProtocolUDP {
 				Proto = "UDP"
@@ -175,10 +180,12 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					SrcPort = int(udp.SrcPort)
 					DstPort = int(udp.DstPort)
 				}
+				mymap.Lock()
 				mymap.dstipUDP[DstIP] = 1
 				mymap.dstportUDP[DstPort] = 1
 				mymap.srcportUDP[SrcPort] = 1
 				mymap.sessionUDP++
+				mymap.Unlock()
 			}
 			if ip4.Protocol == layers.IPProtocolICMPv4 {
 				Proto = "ICMP"
@@ -189,10 +196,12 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				}
 				SrcPort = int(icmp.Id)
 				DstPort = int(icmp.Id)
+				mymap.Lock()
 				mymap.dstipICMP[DstIP] = 1
 				mymap.dstportICMP[DstPort] = 1
 				mymap.srcportICMP[SrcPort] = 1
 				mymap.sessionICMP++
+				mymap.Unlock()
 			}
 			entry := fmt.Sprintf("%6s %15s:%5d %15s:%5d", Proto, SrcIP, SrcPort, DstIP, DstPort)
 
@@ -208,6 +217,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
 				ttl--
 			}
+			mymap.Lock()
 			mymap.sess[entry] = fmt.Sprintf("%d,%d,%d", pkt+1, byte+Length, ttl)
 			mymap.Unlock()
 		}

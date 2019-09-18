@@ -2,7 +2,7 @@ BIN := 4o6top
 GOBIN ?= $(shell go env GOPATH)/bin
 
 NAME    :=4o6top
-VERSION := 0.1
+VERSION := 0.2
 MINVER  :=$(shell date -u +.%Y%m%d)
 BUILD_LDFLAGS := "-X main.Name=$(NAME) -X main.Version=$(VERSION)$(MINVER)" 
 
