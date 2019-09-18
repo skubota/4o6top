@@ -77,7 +77,7 @@ func printSessionTable(opt Options) {
 	log.Printf(" Total Sessions %d\n", mymap.sessionTCP+mymap.sessionUDP+mymap.sessionICMP)
 	fmt.Printf("  TCP  Sessions:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", mymap.sessionTCP, len(mymap.dstipTCP), len(mymap.srcportTCP), len(mymap.dstportTCP))
 	fmt.Printf("  UDP  Sessions:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", mymap.sessionUDP, len(mymap.dstipUDP), len(mymap.srcportUDP), len(mymap.dstportUDP))
-	fmt.Printf("  ICMP Sessions:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", mymap.sessionICMP, len(mymap.dstipICMP), len(mymap.srcportICMP), len(mymap.dstportICMP))
+	fmt.Printf("  ICMP Sessions:%6d DstIP:%6d SrcPort:%6d ICMP ID:%6d\n", mymap.sessionICMP, len(mymap.dstipICMP), len(mymap.srcportICMP), len(mymap.dstportICMP))
 
 	fmt.Printf("\n%6s %15s:%5s %15s:%5s %10s %10s %5s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packets", "Bytes", "ViewTTL")
 	tmp := mymap.sess
