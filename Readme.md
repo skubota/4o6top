@@ -4,7 +4,8 @@ IPv4 over IPv6 network top(4o6top)
 
 ## DESCRIPTION
 
-4o6top is a simple tool to track the session information of IPv4 packets on IPv6
+4o6top is a simple tool to track the session information of IPv4 packets on IPv6 (Encapsulation)
+for DS-Lite(RFC6333),MAP-E(RFC7597),LW4o6(RFC7596)
 
 ### screen shot
 ![sc](https://github.com/skubota/4o6top/raw/master/media/4o6top.png)

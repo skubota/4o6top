@@ -209,7 +209,9 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 			var byte int64
 			var ttl = int64(*opt.initTTL)
 
+			mymap.Lock()
 			_, ok := mymap.sess[entry]
+			mymap.Unlock()
 			if ok {
 				mymap.Lock()
 				val := strings.Split(mymap.sess[entry], ",")
