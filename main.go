@@ -211,7 +211,9 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 
 			_, ok := mymap.sess[entry]
 			if ok {
+				mymap.Lock()
 				val := strings.Split(mymap.sess[entry], ",")
+				mymap.Unlock()
 				pkt, _ = strconv.ParseInt(val[0], 10, 64)
 				byte, _ = strconv.ParseInt(val[1], 10, 64)
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
