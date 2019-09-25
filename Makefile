@@ -11,17 +11,11 @@ all: clean build
 
 .PHONY: build
 build:
-	go build -ldflags=$(BUILD_LDFLAGS) -o $(BIN) 
+	GO111MODULE=on go build -ldflags=$(BUILD_LDFLAGS) -o $(BIN) 
 
 .PHONY: install
 install:
 	go install -ldflags=$(BUILD_LDFLAGS) 
-
-.PHONY: deps
-deps:
-	go get github.com/google/gopacket
-	go get github.com/google/gopacket/layers
-	go get github.com/google/gopacket/pcap
 
 .PHONY: lint
 lint: $(GOBIN)/golint
