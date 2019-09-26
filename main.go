@@ -146,7 +146,7 @@ func printSessionTable(opt Options) {
 		b4.sessionICMP = len(mymap.sessionICMP)
 
 	}
-	// SUM
+	// summary mode
 	if m == "sum" {
 		fmt.Printf("\033[H\033[2J")
 		fmt.Printf("%s ver: %s\n", Name, Version)
@@ -159,6 +159,7 @@ func printSessionTable(opt Options) {
 
 		fmt.Printf("\n%6s %15s:%5s %15s:%5s %10s %10s %5s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packets", "Bytes", "ViewTTL")
 	}
+	// statistics mode
 	if m == "stat" {
 		t := time.Now()
 		d := *opt.delimiter
@@ -323,6 +324,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
 				ttl--
 			}
+			// logging mode
 			if m == "log" {
 				t := packet.Metadata().CaptureInfo.Timestamp
 				d := *opt.delimiter
