@@ -29,133 +29,83 @@ type Options struct {
 	initTTL   *int
 	height    *int
 	mode      *string
-	count     *bool
 	delimiter *string
 }
 
 // map struct for session map
 type maps struct {
 	sync.Mutex
-	sess        map[string]string
-	sessionTCP  map[string]int
-	sessionUDP  map[string]int
-	sessionICMP map[string]int
-	srcportTCP  map[int]int
-	srcportUDP  map[int]int
-	srcportICMP map[int]int
-	dstportTCP  map[int]int
-	dstportUDP  map[int]int
-	dstportICMP map[int]int
-	dstipTCP    map[string]int
-	dstipUDP    map[string]int
-	dstipICMP   map[string]int
+	sess map[string]string
 }
 
 // mymap session gloval var
 var mymap = maps{
-	sess:        map[string]string{},
-	sessionTCP:  map[string]int{},
-	sessionUDP:  map[string]int{},
-	sessionICMP: map[string]int{},
-	srcportTCP:  map[int]int{},
-	srcportUDP:  map[int]int{},
-	srcportICMP: map[int]int{},
-	dstportTCP:  map[int]int{},
-	dstportUDP:  map[int]int{},
-	dstportICMP: map[int]int{},
-	dstipTCP:    map[string]int{},
-	dstipUDP:    map[string]int{},
-	dstipICMP:   map[string]int{},
-}
-
-type b4map struct {
-	sessionTCP  int
-	sessionUDP  int
-	sessionICMP int
-	srcportTCP  int
-	srcportUDP  int
-	srcidICMP   int
-	dstportTCP  int
-	dstportUDP  int
-	dstipTCP    int
-	dstipUDP    int
-	dstipICMP   int
-}
-
-var b4 = b4map{
-	sessionTCP:  0,
-	sessionUDP:  0,
-	sessionICMP: 0,
-	srcportTCP:  0,
-	srcportUDP:  0,
-	srcidICMP:   0,
-	dstportTCP:  0,
-	dstportUDP:  0,
-	dstipTCP:    0,
-	dstipUDP:    0,
-	dstipICMP:   0,
+	sess: map[string]string{},
 }
 
 // print session table
 func printSessionTable(opt Options) {
 	h := *opt.height
 	m := *opt.mode
-	c := *opt.count
 
 	// counter
-	srcportTCP := len(mymap.srcportTCP)
-	srcportUDP := len(mymap.srcportUDP)
-	srcidICMP := len(mymap.srcportICMP)
-	dstipTCP := len(mymap.dstipTCP)
-	dstipUDP := len(mymap.dstipUDP)
-	dstipICMP := len(mymap.dstipICMP)
-	dstportTCP := len(mymap.dstportTCP)
-	dstportUDP := len(mymap.dstportUDP)
+	srcport := make(map[string]map[string]int)
+	srcport["TCP"] = make(map[string]int)
+	srcport["UDP"] = make(map[string]int)
+	srcport["ICMP"] = make(map[string]int)
 
-	sessionTCP := len(mymap.sessionTCP)
-	sessionUDP := len(mymap.sessionUDP)
-	sessionICMP := len(mymap.sessionICMP)
+	dstip := make(map[string]map[string]int)
+	dstip["TCP"] = make(map[string]int)
+	dstip["UDP"] = make(map[string]int)
+	dstip["ICMP"] = make(map[string]int)
 
-	session := sessionTCP + sessionUDP + sessionICMP
+	dstport := make(map[string]map[string]int)
+	dstport["TCP"] = make(map[string]int)
+	dstport["UDP"] = make(map[string]int)
 
-	if c {
-		session = session - (b4.sessionTCP + b4.sessionUDP + b4.sessionICMP)
-		sessionTCP = sessionTCP - b4.sessionTCP
-		sessionUDP = sessionUDP - b4.sessionUDP
-		sessionICMP = sessionICMP - b4.sessionICMP
-		srcportTCP = srcportTCP - b4.srcportTCP
-		srcportUDP = srcportUDP - b4.srcportUDP
-		srcidICMP = srcidICMP - b4.srcidICMP
-		dstipTCP = dstipTCP - b4.dstipTCP
-		dstipUDP = dstipUDP - b4.dstipUDP
-		dstipICMP = dstipICMP - b4.dstipICMP
-		dstportTCP = dstportTCP - b4.dstportTCP
-		dstportUDP = dstportUDP - b4.dstportUDP
+	session := make(map[string]map[string]int)
+	session["TCP"] = make(map[string]int)
+	session["UDP"] = make(map[string]int)
+	session["ICMP"] = make(map[string]int)
 
-		b4.srcportTCP = len(mymap.srcportTCP)
-		b4.srcportUDP = len(mymap.srcportUDP)
-		b4.srcidICMP = len(mymap.srcportICMP)
-		b4.dstipTCP = len(mymap.dstipTCP)
-		b4.dstipUDP = len(mymap.dstipUDP)
-		b4.dstipICMP = len(mymap.dstipICMP)
-		b4.dstportTCP = len(mymap.dstportTCP)
-		b4.dstportUDP = len(mymap.dstportUDP)
-
-		b4.sessionTCP = len(mymap.sessionTCP)
-		b4.sessionUDP = len(mymap.sessionUDP)
-		b4.sessionICMP = len(mymap.sessionICMP)
-
+	// now session
+	mymap.Lock()
+	tmp := mymap.sess
+	mymap.Unlock()
+	for k := range tmp {
+		// ss=[Proto, SrcIP, SrcPort, DstIP, DstPort]
+		ss := strings.Split(k, ",")
+		if ss[0] == "TCP" {
+			srcport["TCP"][ss[2]] = 1
+			dstip["TCP"][ss[3]] = 1
+			dstport["TCP"][ss[4]] = 1
+			session["TCP"][ss[2]+":"+ss[3]+":"+ss[4]] = 1
+		}
+		if ss[0] == "UDP" {
+			srcport["UDP"][ss[2]] = 1
+			dstip["UDP"][ss[3]] = 1
+			dstport["UDP"][ss[4]] = 1
+			session["UDP"][ss[2]+":"+ss[3]+":"+ss[4]] = 1
+		}
+		if ss[0] == "ICMP" {
+			srcport["ICMP"][ss[2]] = 1
+			dstip["ICMP"][ss[3]] = 1
+			session["ICMP"][ss[2]+":"+ss[3]+":"+ss[4]] = 1
+		}
 	}
+
+	sessions := len(session["TCP"]) + len(session["UDP"]) + len(session["ICMP"])
+
 	// summary mode
 	if m == "sum" {
 		fmt.Printf("\033[H\033[2J")
 		fmt.Printf("%s ver: %s\n", Name, Version)
 		fmt.Printf(" Option file:%s interval:%d TTL:%d Height:%d src ip:%s\n\n", *opt.pcapFile, *opt.interval, *opt.initTTL, *opt.height, *opt.srcIP)
 
-		log.Printf(" Total Sess:%d\n", session)
-		fmt.Printf("  TCP  Sess:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", sessionTCP, dstipTCP, srcportTCP, dstportTCP)
-		fmt.Printf("  UDP  Sess:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", sessionUDP, dstipUDP, srcportUDP, dstportUDP)
-		fmt.Printf("  ICMP Sess:%6d DstIP:%6d ICMP ID:%6d\n", sessionICMP, dstipICMP, srcidICMP)
+		log.Printf(" Total Sess:%d\n", sessions)
+		fmt.Printf("  TCP  Sess:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", len(session["TCP"]), len(dstip["TCP"]), len(srcport["TCP"]), len(dstport["TCP"]))
+		fmt.Printf("  UDP  Sess:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", len(session["UDP"]), len(dstip["UDP"]), len(srcport["UDP"]), len(dstport["UDP"]))
+		fmt.Printf("  ICMP Sess:%6d DstIP:%6d ICMP ID:%6d\n", len(session["ICMP"]), len(dstip["ICMP"]), len(srcport["ICMP"]))
 
 		fmt.Printf("\n%6s %15s:%5s %15s:%5s %10s %10s %5s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packets", "Bytes", "ViewTTL")
 	}
@@ -165,21 +115,20 @@ func printSessionTable(opt Options) {
 		d := *opt.delimiter
 		//time,Session,TCPSession,UDPSession,ICMPSession,TCPSrcPort,UDPSrcPort,ICMPId,TCPDstPort,UDPDstPort
 		fmt.Printf("%s%s", t.Format(time.RFC3339Nano), d)
-		fmt.Printf("%d%s", session, d)
-		fmt.Printf("%d%s", sessionTCP, d)
-		fmt.Printf("%d%s", sessionUDP, d)
-		fmt.Printf("%d%s", sessionICMP, d)
-		fmt.Printf("%d%s", srcportTCP, d)
-		fmt.Printf("%d%s", srcportUDP, d)
-		fmt.Printf("%d%s", srcidICMP, d)
-		fmt.Printf("%d%s", dstipTCP, d)
-		fmt.Printf("%d%s", dstipUDP, d)
-		fmt.Printf("%d%s", dstipICMP, d)
-		fmt.Printf("%d%s", dstportTCP, d)
-		fmt.Printf("%d%s", dstportUDP, d)
+		fmt.Printf("%d%s", sessions, d)
+		fmt.Printf("%d%s", len(session["TCP"]), d)
+		fmt.Printf("%d%s", len(session["UDP"]), d)
+		fmt.Printf("%d%s", len(session["ICMP"]), d)
+		fmt.Printf("%d%s", len(srcport["TCP"]), d)
+		fmt.Printf("%d%s", len(srcport["UDP"]), d)
+		fmt.Printf("%d%s", len(srcport["ICMP"]), d)
+		fmt.Printf("%d%s", len(dstip["TCP"]), d)
+		fmt.Printf("%d%s", len(dstip["UDP"]), d)
+		fmt.Printf("%d%s", len(dstip["ICMP"]), d)
+		fmt.Printf("%d%s", len(dstport["TCP"]), d)
+		fmt.Printf("%d%s", len(dstport["UDP"]), d)
 		fmt.Printf("\n")
 	}
-	tmp := mymap.sess
 	for k, v := range tmp {
 		var pkt int64
 		var byte int64
@@ -199,12 +148,14 @@ func printSessionTable(opt Options) {
 			ttl--
 			h--
 
+			// ss=[Proto, SrcIP, SrcPort, DstIP, DstPort]
+			ss := strings.Split(k, ",")
 			if ttl > 0 {
 				mymap.Lock()
 				mymap.sess[k] = fmt.Sprintf("%d,%d,%d", pkt, byte, ttl)
 				mymap.Unlock()
 				if m == "sum" {
-					fmt.Printf("%s %10d %10d %5d\n", k, pkt, byte, ttl)
+					fmt.Printf("%6s %15s:%5s %15s:%5s %10d %10d %5d\n", ss[0], ss[1], ss[2], ss[3], ss[4], pkt, byte, ttl)
 				}
 
 			} else {
@@ -212,9 +163,8 @@ func printSessionTable(opt Options) {
 				delete(mymap.sess, k)
 				mymap.Unlock()
 			}
-
 		}
-		if h < 2 {
+		if h < 1 {
 			return
 		}
 	}
@@ -262,12 +212,6 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					SrcPort = int(tcp.SrcPort)
 					DstPort = int(tcp.DstPort)
 				}
-				mymap.Lock()
-				mymap.dstipTCP[DstIP] = 1
-				mymap.dstportTCP[DstPort] = 1
-				mymap.srcportTCP[SrcPort] = 1
-				mymap.sessionTCP[strconv.Itoa(SrcPort)+DstIP+":"+strconv.Itoa(DstPort)]++
-				mymap.Unlock()
 			}
 			if ip4.Protocol == layers.IPProtocolUDP {
 				Proto = "UDP"
@@ -283,12 +227,6 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					SrcPort = int(udp.SrcPort)
 					DstPort = int(udp.DstPort)
 				}
-				mymap.Lock()
-				mymap.dstipUDP[DstIP] = 1
-				mymap.dstportUDP[DstPort] = 1
-				mymap.srcportUDP[SrcPort] = 1
-				mymap.sessionUDP[strconv.Itoa(SrcPort)+DstIP+":"+strconv.Itoa(DstPort)]++
-				mymap.Unlock()
 			}
 			if ip4.Protocol == layers.IPProtocolICMPv4 {
 				Proto = "ICMP"
@@ -299,14 +237,8 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				}
 				SrcPort = int(icmp.Id)
 				DstPort = int(icmp.Id)
-				mymap.Lock()
-				mymap.dstipICMP[DstIP] = 1
-				mymap.dstportICMP[DstPort] = 1
-				mymap.srcportICMP[SrcPort] = 1
-				mymap.sessionICMP[strconv.Itoa(SrcPort)+DstIP+":"+strconv.Itoa(DstPort)]++
-				mymap.Unlock()
 			}
-			entry := fmt.Sprintf("%6s %15s:%5d %15s:%5d", Proto, SrcIP, SrcPort, DstIP, DstPort)
+			entry := fmt.Sprintf("%s,%s,%d,%s,%d", Proto, SrcIP, SrcPort, DstIP, DstPort)
 
 			var pkt int64
 			var byte int64
@@ -322,7 +254,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				pkt, _ = strconv.ParseInt(val[0], 10, 64)
 				byte, _ = strconv.ParseInt(val[1], 10, 64)
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
-				ttl--
+				//ttl--
 			}
 			// logging mode
 			if m == "log" {
@@ -351,7 +283,6 @@ func main() {
 
 	opt.delimiter = flag.String("d", ",", "Field delimiter(stat,log)")
 	opt.interval = flag.Int("i", 1, "reflesh interval(sum,stat)")
-	opt.count = flag.Bool("c", true, "Counter refresh every interval(sum,stat)")
 	flag.Parse()
 
 	// open pcap file

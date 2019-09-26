@@ -32,19 +32,25 @@ IPv4 over IPv6 network top(4o6top)
 
 ```
 Usage of ./4o6top:
-  -c	Counter refresh every interval(sum,stat) (default true)
+
   -d string
     	Field delimiter(stat,log) (default ",")
+
   -h int
     	Height(sum) (default 30)
+
   -i int
     	reflesh interval(sum,stat) (default 1)
+
   -m string
     	Mode [sum|stat|log] (default "sum")
+
   -r string
     	Read pcap file (default "-")
+
   -s string
     	Source ip address
+
   -t int
     	Entry view ttl(sum) (default 3)
 ```
