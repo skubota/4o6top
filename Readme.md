@@ -32,27 +32,28 @@ IPv4 over IPv6 network top(4o6top)
 
 ```
 Usage of ./4o6top:
-
+  -Ti int
+    	ICMP Timeout (default 3)
+  -Tt int
+    	TCP Timeout (default 240)
+  -Ttr int
+    	TCP RST/FIN Timeout (default 10)
+  -Tu int
+    	UDP Timeout (default 60)
+  -Tud int
+    	UDP DNS Timeout (default 3)
   -d string
     	Field delimiter(stat,log) (default ",")
-
   -h int
     	Height(sum) (default 30)
-
   -i int
     	reflesh interval(sum,stat) (default 1)
-
   -m string
     	Mode [sum|stat|log] (default "sum")
-
   -r string
     	Read pcap file (default "-")
-
   -s string
     	Source ip address
-
-  -t int
-    	Entry view ttl(sum) (default 3)
 ```
 
 ## License
