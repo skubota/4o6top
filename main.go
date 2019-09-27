@@ -278,7 +278,7 @@ func main() {
 	opt.timeOutUDPDns = flag.Int("Tud", 3, "UDP DNS Timeout")
 	opt.timeOutICMP = flag.Int("Ti", 3, "ICMP Timeout")
 
-	opt.height = flag.Int("h", 30, "Height(sum)")
+	opt.height = flag.Int("h", 30, "Summary table height(sum)")
 
 	opt.delimiter = flag.String("d", ",", "Field delimiter(stat,log)")
 	opt.interval = flag.Int("i", 1, "reflesh interval(sum,stat)")
