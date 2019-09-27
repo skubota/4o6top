@@ -32,16 +32,8 @@ type Options struct {
 	delimiter *string
 }
 
-// map struct for session map
-type maps struct {
-	sync.Mutex
-	sess map[string]string
-}
-
-// mymap session gloval var
-var mymap = maps{
-	sess: map[string]string{},
-}
+// session gloval var map
+var sess sync.Map
 
 // print session table
 func printSessionTable(opt Options) {
@@ -69,12 +61,9 @@ func printSessionTable(opt Options) {
 	session["ICMP"] = make(map[string]int)
 
 	// now session
-	mymap.Lock()
-	tmp := mymap.sess
-	mymap.Unlock()
-	for k := range tmp {
+	sess.Range(func(k, v interface{}) bool {
 		// ss=[Proto, SrcIP, SrcPort, DstIP, DstPort]
-		ss := strings.Split(k, ",")
+		ss := strings.Split(fmt.Sprintf("%s", k), ",")
 		if ss[0] == "TCP" {
 			srcport["TCP"][ss[2]] = 1
 			dstip["TCP"][ss[3]] = 1
@@ -92,7 +81,8 @@ func printSessionTable(opt Options) {
 			dstip["ICMP"][ss[3]] = 1
 			session["ICMP"][ss[2]+":"+ss[3]+":"+ss[4]] = 1
 		}
-	}
+		return true
+	})
 
 	sessions := len(session["TCP"]) + len(session["UDP"]) + len(session["ICMP"])
 
@@ -129,45 +119,39 @@ func printSessionTable(opt Options) {
 		fmt.Printf("%d%s", len(dstport["UDP"]), d)
 		fmt.Printf("\n")
 	}
-	for k, v := range tmp {
+	sess.Range(func(k, v interface{}) bool {
 		var pkt int64
 		var byte int64
 		var ttl int64
-		if len(v) > 0 {
-			val := strings.Split(v, ",")
-			if len(val[0]) > 0 {
-				pkt, _ = strconv.ParseInt(val[0], 10, 64)
-			}
-			if len(val[1]) > 0 {
-				byte, _ = strconv.ParseInt(val[1], 10, 64)
-			}
-			if len(val[2]) > 0 {
-				ttl, _ = strconv.ParseInt(val[2], 10, 64)
-			}
-
-			ttl--
-			h--
-
-			// ss=[Proto, SrcIP, SrcPort, DstIP, DstPort]
-			ss := strings.Split(k, ",")
-			if ttl > 0 {
-				mymap.Lock()
-				mymap.sess[k] = fmt.Sprintf("%d,%d,%d", pkt, byte, ttl)
-				mymap.Unlock()
-				if m == "sum" {
-					fmt.Printf("%6s %15s:%5s %15s:%5s %10d %10d %5d\n", ss[0], ss[1], ss[2], ss[3], ss[4], pkt, byte, ttl)
-				}
-
-			} else {
-				mymap.Lock()
-				delete(mymap.sess, k)
-				mymap.Unlock()
-			}
+		val := strings.Split(fmt.Sprintf("%s", v), ",")
+		if len(val[0]) > 0 {
+			pkt, _ = strconv.ParseInt(val[0], 10, 64)
 		}
+		if len(val[1]) > 0 {
+			byte, _ = strconv.ParseInt(val[1], 10, 64)
+		}
+		if len(val[2]) > 0 {
+			ttl, _ = strconv.ParseInt(val[2], 10, 64)
+		}
+
+		// ss=[Proto, SrcIP, SrcPort, DstIP, DstPort]
+		ss := strings.Split(fmt.Sprintf("%s", k), ",")
+		if ttl > 0 {
+			sess.Store(k, fmt.Sprintf("%d,%d,%d", pkt, byte, ttl))
+			if m == "sum" {
+				fmt.Printf("%6s %15s:%5s %15s:%5s %10d %10d %5d\n", ss[0], ss[1], ss[2], ss[3], ss[4], pkt, byte, ttl)
+			}
+
+		} else {
+			sess.Delete(k)
+		}
+		ttl--
+		h--
 		if h < 1 {
-			return
+			return false
 		}
-	}
+		return true
+	})
 }
 
 // capture packet
@@ -244,17 +228,11 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 			var byte int64
 			var ttl = int64(*opt.initTTL)
 
-			mymap.Lock()
-			_, ok := mymap.sess[entry]
-			mymap.Unlock()
-			if ok {
-				mymap.Lock()
-				val := strings.Split(mymap.sess[entry], ",")
-				mymap.Unlock()
+			if vv, ok := sess.Load(entry); ok {
+				val := strings.Split(fmt.Sprintf("%s", vv), ",")
 				pkt, _ = strconv.ParseInt(val[0], 10, 64)
 				byte, _ = strconv.ParseInt(val[1], 10, 64)
 				ttl, _ = strconv.ParseInt(val[2], 10, 64)
-				//ttl--
 			}
 			// logging mode
 			if m == "log" {
@@ -262,9 +240,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				d := *opt.delimiter
 				fmt.Printf("%s%s%s%s%s%s%d%s%s%s%d%s%d\n", t.Format(time.RFC3339Nano), d, Proto, d, SrcIP, d, SrcPort, d, DstIP, d, DstPort, d, Length)
 			}
-			mymap.Lock()
-			mymap.sess[entry] = fmt.Sprintf("%d,%d,%d", pkt+1, byte+Length, ttl)
-			mymap.Unlock()
+			sess.Store(entry, fmt.Sprintf("%d,%d,%d", pkt+1, byte+Length, ttl))
 		}
 	}
 }
