@@ -108,7 +108,7 @@ func printSessionTable(opt Options) {
 		t := time.Now()
 		d := *opt.delimiter
 		//time,Session,TCPSession,UDPSession,ICMPSession,TCPSrcPort,UDPSrcPort,ICMPId,TCPDstPort,UDPDstPort
-		fmt.Printf("%s%s", t.Format(time.RFC3339Nano), d)
+		fmt.Printf("%s%s", t.Format(time.RFC3339), d)
 		fmt.Printf("%d%s", sessions, d)
 		fmt.Printf("%d%s", len(session["TCP"]), d)
 		fmt.Printf("%d%s", len(session["UDP"]), d)
@@ -251,7 +251,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 			if m == "log" {
 				t := packet.Metadata().CaptureInfo.Timestamp
 				d := *opt.delimiter
-				fmt.Printf("%s%s%s%s%s%s%d%s%s%s%d%s%d\n", t.Format(time.RFC3339Nano), d, Proto, d, SrcIP, d, SrcPort, d, DstIP, d, DstPort, d, Length)
+				fmt.Printf("%s%s%s%s%s%s%d%s%s%s%d%s%d\n", t.Format(time.RFC3339), d, Proto, d, SrcIP, d, SrcPort, d, DstIP, d, DstPort, d, Length)
 			}
 			sess.Store(entry, fmt.Sprintf("%d,%d,%d", pkt+1, byte+Length, ttl))
 		}
