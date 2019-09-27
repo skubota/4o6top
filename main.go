@@ -16,7 +16,7 @@ import (
 )
 
 // Version of PROG
-var Version = "0.2"
+var Version = "0"
 
 // Name of PROG
 var Name = "4o6top"
@@ -166,15 +166,17 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 	if l != nil {
 		ip6, _ := l.(*layers.IPv6)
 		if ip6.NextHeader == layers.IPProtocolIPv4 {
-			var ttl = 0
 			rev := false
 			var (
 				Proto, SrcIP, DstIP string
 			)
 			var (
-				SrcPort, DstPort int
+				SrcPort, DstPort, ttl int
 			)
-			var Length int64
+			var (
+				Length, pkt, byte int64
+			)
+
 			nl := packet.Layer(layers.LayerTypeIPv4)
 			ip4, _ := nl.(*layers.IPv4)
 
@@ -202,7 +204,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					DstPort = int(tcp.DstPort)
 				}
 				ttl = *opt.timeOutTCP
-				if tcp.RST || ( tcp.FIN && tcp.ACK ) {
+				if tcp.RST || (tcp.FIN && tcp.ACK) {
 					ttl = *opt.timeOutTCPRst
 				}
 			}
@@ -238,15 +240,18 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 			}
 			entry := fmt.Sprintf("%s,%s,%d,%s,%d", Proto, SrcIP, SrcPort, DstIP, DstPort)
 
-			var pkt int64
-			var byte int64
-
 			if vv, ok := sess.Load(entry); ok {
 				val := strings.Split(fmt.Sprintf("%s", vv), ",")
 				pkt, _ = strconv.ParseInt(val[0], 10, 64)
 				byte, _ = strconv.ParseInt(val[1], 10, 64)
-				ttl, _ = strconv.Atoi(val[2])
+				b4ttl, _ := strconv.Atoi(val[2])
+				max := ttl
+				ttl = ttl + b4ttl
+				if ttl > max {
+					ttl = max
+				}
 			}
+
 			// logging mode
 			if m == "log" {
 				t := packet.Metadata().CaptureInfo.Timestamp
