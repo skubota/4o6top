@@ -14,10 +14,6 @@ IPv4 over IPv6 network top(4o6top)
                      (capture)
 ```
 
-
-### screen shot
-![sc](https://github.com/skubota/4o6top/raw/master/media/4o6top.png)
-
 ### requrement
 
 - golang
