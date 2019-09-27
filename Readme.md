@@ -17,6 +17,7 @@ IPv4 over IPv6 network top(4o6top)
 ### requrement
 
 - golang
+- - gopacket
 - libpcap (libpcap-devel)
 
 ### usage
