@@ -23,13 +23,17 @@ var Name = "4o6top"
 
 // Options struct for option
 type Options struct {
-	srcIP     *string
-	pcapFile  *string
-	interval  *int
-	initTTL   *int
-	height    *int
-	mode      *string
-	delimiter *string
+	srcIP         *string
+	pcapFile      *string
+	interval      *int
+	height        *int
+	mode          *string
+	delimiter     *string
+	timeOutTCP    *int
+	timeOutTCPRst *int
+	timeOutUDP    *int
+	timeOutUDPDns *int
+	timeOutICMP   *int
 }
 
 // session gloval var map
@@ -90,14 +94,14 @@ func printSessionTable(opt Options) {
 	if m == "sum" {
 		fmt.Printf("\033[H\033[2J")
 		fmt.Printf("%s ver: %s\n", Name, Version)
-		fmt.Printf(" Option file:%s interval:%d TTL:%d Height:%d src ip:%s\n\n", *opt.pcapFile, *opt.interval, *opt.initTTL, *opt.height, *opt.srcIP)
+		fmt.Printf(" Option file:%s interval:%d Timeout:%d/%d/%d/%d/%d Height:%d src ip:%s\n\n", *opt.pcapFile, *opt.interval, *opt.timeOutTCP, *opt.timeOutTCPRst, *opt.timeOutUDP, *opt.timeOutUDPDns, *opt.timeOutICMP, *opt.height, *opt.srcIP)
 
 		log.Printf(" Total Sess:%d\n", sessions)
 		fmt.Printf("  TCP  Sess:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", len(session["TCP"]), len(dstip["TCP"]), len(srcport["TCP"]), len(dstport["TCP"]))
 		fmt.Printf("  UDP  Sess:%6d DstIP:%6d SrcPort:%6d DstPort:%6d\n", len(session["UDP"]), len(dstip["UDP"]), len(srcport["UDP"]), len(dstport["UDP"]))
 		fmt.Printf("  ICMP Sess:%6d DstIP:%6d ICMP ID:%6d\n", len(session["ICMP"]), len(dstip["ICMP"]), len(srcport["ICMP"]))
 
-		fmt.Printf("\n%6s %15s:%5s %15s:%5s %10s %10s %5s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packets", "Bytes", "ViewTTL")
+		fmt.Printf("\n%6s %15s:%5s %15s:%5s %10s %10s %5s\n", "Proto", "Source IP", "Port", "Dest IP", "Port", "Packets", "Bytes", "Timeout")
 	}
 	// statistics mode
 	if m == "stat" {
@@ -133,6 +137,8 @@ func printSessionTable(opt Options) {
 		if len(val[2]) > 0 {
 			ttl, _ = strconv.ParseInt(val[2], 10, 64)
 		}
+		ttl--
+		h--
 
 		// ss=[Proto, SrcIP, SrcPort, DstIP, DstPort]
 		ss := strings.Split(fmt.Sprintf("%s", k), ",")
@@ -145,8 +151,6 @@ func printSessionTable(opt Options) {
 		} else {
 			sess.Delete(k)
 		}
-		ttl--
-		h--
 		if h < 1 {
 			return false
 		}
@@ -162,6 +166,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 	if l != nil {
 		ip6, _ := l.(*layers.IPv6)
 		if ip6.NextHeader == layers.IPProtocolIPv4 {
+			var ttl = 0
 			rev := false
 			var (
 				Proto, SrcIP, DstIP string
@@ -196,6 +201,10 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					SrcPort = int(tcp.SrcPort)
 					DstPort = int(tcp.DstPort)
 				}
+				ttl = *opt.timeOutTCP
+				if tcp.RST || ( tcp.FIN && tcp.ACK ) {
+					ttl = *opt.timeOutTCPRst
+				}
 			}
 			if ip4.Protocol == layers.IPProtocolUDP {
 				Proto = "UDP"
@@ -211,6 +220,10 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 					SrcPort = int(udp.SrcPort)
 					DstPort = int(udp.DstPort)
 				}
+				ttl = *opt.timeOutUDP
+				if SrcPort == 53 || DstPort == 53 {
+					ttl = *opt.timeOutUDPDns
+				}
 			}
 			if ip4.Protocol == layers.IPProtocolICMPv4 {
 				Proto = "ICMP"
@@ -221,18 +234,18 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				}
 				SrcPort = int(icmp.Id)
 				DstPort = int(icmp.Id)
+				ttl = *opt.timeOutICMP
 			}
 			entry := fmt.Sprintf("%s,%s,%d,%s,%d", Proto, SrcIP, SrcPort, DstIP, DstPort)
 
 			var pkt int64
 			var byte int64
-			var ttl = int64(*opt.initTTL)
 
 			if vv, ok := sess.Load(entry); ok {
 				val := strings.Split(fmt.Sprintf("%s", vv), ",")
 				pkt, _ = strconv.ParseInt(val[0], 10, 64)
 				byte, _ = strconv.ParseInt(val[1], 10, 64)
-				ttl, _ = strconv.ParseInt(val[2], 10, 64)
+				ttl, _ = strconv.Atoi(val[2])
 			}
 			// logging mode
 			if m == "log" {
@@ -254,7 +267,12 @@ func main() {
 	opt.srcIP = flag.String("s", "", "Source ip address")
 	opt.pcapFile = flag.String("r", "-", "Read pcap file")
 
-	opt.initTTL = flag.Int("t", 3, "Entry view ttl(sum)")
+	opt.timeOutTCP = flag.Int("Tt", 240, "TCP Timeout")
+	opt.timeOutTCPRst = flag.Int("Ttr", 10, "TCP RST/FIN Timeout")
+	opt.timeOutUDP = flag.Int("Tu", 60, "UDP Timeout")
+	opt.timeOutUDPDns = flag.Int("Tud", 3, "UDP DNS Timeout")
+	opt.timeOutICMP = flag.Int("Ti", 3, "ICMP Timeout")
+
 	opt.height = flag.Int("h", 30, "Height(sum)")
 
 	opt.delimiter = flag.String("d", ",", "Field delimiter(stat,log)")
