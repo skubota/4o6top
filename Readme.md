@@ -42,13 +42,14 @@ Usage of ./4o6top:
   -Tud int
     	UDP DNS Timeout (default 3)
   -d string
-    	Field delimiter(stat,log) (default ",")
+    	Field delimiter(stat,log,sess) (default ",")
   -h int
-    	Height(sum) (default 30)
+    	Summary table height(sum) (default 30)
   -i int
     	reflesh interval(sum,stat) (default 1)
   -m string
-    	Mode [sum|stat|log] (default "sum")
+    	Mode [sum|stat|log|sess] (default "sum")
+  -n	No header.tupples only(stat,log,sess)
   -r string
     	Read pcap file (default "-")
   -s string

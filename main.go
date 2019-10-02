@@ -15,7 +15,6 @@ import (
 	"time"
 )
 
-
 // Name of PROG
 var Name = "4o6top"
 
@@ -35,6 +34,7 @@ type Options struct {
 	timeOutUDP    *int
 	timeOutUDPDns *int
 	timeOutICMP   *int
+	noheader      *bool
 }
 
 // session gloval var map
@@ -251,6 +251,9 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 				if ttl > max {
 					ttl = max
 				}
+			} else if m == "sess" {
+				d := *opt.delimiter
+				fmt.Printf("%s%s%s%s%d%s%s%s%d\n", Proto, d, SrcIP, d, SrcPort, d, DstIP, d, DstPort)
 			}
 
 			// logging mode
@@ -268,7 +271,7 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 func main() {
 	opt := new(Options)
 
-	opt.mode = flag.String("m", "sum", "Mode [sum|stat|log]")
+	opt.mode = flag.String("m", "sum", "Mode [sum|stat|log|sess]")
 
 	opt.srcIP = flag.String("s", "", "Source ip address")
 	opt.pcapFile = flag.String("r", "-", "Read pcap file")
@@ -280,8 +283,9 @@ func main() {
 	opt.timeOutICMP = flag.Int("Ti", 3, "ICMP Timeout")
 
 	opt.height = flag.Int("h", 30, "Summary table height(sum)")
+	opt.noheader = flag.Bool("n", false, "No header.tupples only(stat,log,sess)")
 
-	opt.delimiter = flag.String("d", ",", "Field delimiter(stat,log)")
+	opt.delimiter = flag.String("d", ",", "Field delimiter(stat,log,sess)")
 	opt.interval = flag.Int("i", 1, "reflesh interval(sum,stat)")
 	flag.Parse()
 
@@ -294,31 +298,42 @@ func main() {
 
 	// header
 	d := *opt.delimiter
-	if *opt.mode == "log" {
-		fmt.Printf("time%s", d)
-		fmt.Printf("Proto%s", d)
-		fmt.Printf("SrcIP%s", d)
-		fmt.Printf("SrcPort%s", d)
-		fmt.Printf("DstIP%s", d)
-		fmt.Printf("DstPort%s", d)
-		fmt.Printf("Length%s", d)
-		fmt.Printf("\n")
-	}
-	if *opt.mode == "stat" {
-		fmt.Printf("time%s", d)
-		fmt.Printf("Session%s", d)
-		fmt.Printf("TCPSession%s", d)
-		fmt.Printf("UDPSession%s", d)
-		fmt.Printf("ICMPSession%s", d)
-		fmt.Printf("TCPSrcPort%s", d)
-		fmt.Printf("UDPSrcPort%s", d)
-		fmt.Printf("ICMPID%s", d)
-		fmt.Printf("TCPDstIP%s", d)
-		fmt.Printf("UDPDstIP%s", d)
-		fmt.Printf("ICMPDstIP%s", d)
-		fmt.Printf("TCPDstPort%s", d)
-		fmt.Printf("UDPDstPort%s", d)
-		fmt.Printf("\n")
+
+	if !*opt.noheader {
+		if *opt.mode == "log" {
+			fmt.Printf("time%s", d)
+			fmt.Printf("Proto%s", d)
+			fmt.Printf("SrcIP%s", d)
+			fmt.Printf("SrcPort%s", d)
+			fmt.Printf("DstIP%s", d)
+			fmt.Printf("DstPort%s", d)
+			fmt.Printf("Length%s", d)
+			fmt.Printf("\n")
+		}
+		if *opt.mode == "stat" {
+			fmt.Printf("time%s", d)
+			fmt.Printf("Session%s", d)
+			fmt.Printf("TCPSession%s", d)
+			fmt.Printf("UDPSession%s", d)
+			fmt.Printf("ICMPSession%s", d)
+			fmt.Printf("TCPSrcPort%s", d)
+			fmt.Printf("UDPSrcPort%s", d)
+			fmt.Printf("ICMPID%s", d)
+			fmt.Printf("TCPDstIP%s", d)
+			fmt.Printf("UDPDstIP%s", d)
+			fmt.Printf("ICMPDstIP%s", d)
+			fmt.Printf("TCPDstPort%s", d)
+			fmt.Printf("UDPDstPort%s", d)
+			fmt.Printf("\n")
+		}
+		if *opt.mode == "sess" {
+			fmt.Printf("Proto%s", d)
+			fmt.Printf("SrcIP%s", d)
+			fmt.Printf("SrcPort%s", d)
+			fmt.Printf("DstIP%s", d)
+			fmt.Printf("DstPort%s", d)
+			fmt.Printf("\n")
+		}
 	}
 
 	// capture routine
