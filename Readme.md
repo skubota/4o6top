@@ -99,6 +99,20 @@ time,Proto,SrcIP,SrcPort,DstIP,DstPort,Length,
 2019-01-01T00:00:02+09:00,TCP,xxx.xxx.xxx.xxx,13267,23.67.185.xxx,80,52
 ```
 
+- Session(sess)
+
+```
+Proto,SrcIP,SrcPort,DstIP,DstPort,
+TCP,xxx.xxx.xxx.xxx,37855,52.38.43.xxx,443
+TCP,xxx.xxx.xxx.xxx,58324,34.214.175.xxx,443
+TCP,xxx.xxx.xxx.xxx,13267,23.67.185.xxx,80
+TCP,xxx.xxx.xxx.xxx,29659,23.67.185.xxx,80
+TCP,xxx.xxx.xxx.xxx,47059,69.192.104.xxx,443
+TCP,xxx.xxx.xxx.xxx,18389,23.67.185.xxx,443
+TCP,xxx.xxx.xxx.xxx,61401,69.192.104.xxx,443
+TCP,xxx.xxx.xxx.xxx,57302,23.67.187.xxx,443
+TCP,xxx.xxx.xxx.xxx,53210,23.67.185.xxx,80
+```
 
 ## License
 
