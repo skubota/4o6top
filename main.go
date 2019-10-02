@@ -271,6 +271,43 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 func main() {
 	opt := new(Options)
 
+  flag.Usage = func() {
+    usageTxt := `
+Usage: 4o6top [option]
+
+  -m string
+    	Mode [sum|stat|log|sess] (default "sum")
+  -r string
+    	Read pcap file (default "-")
+  -s string
+    	Source ip address
+
+  -Ti int
+    	ICMP Timeout (default 3)
+  -Tt int
+    	TCP Timeout (default 240)
+  -Ttr int
+    	TCP RST/FIN Timeout (default 10)
+  -Tu int
+    	UDP Timeout (default 60)
+  -Tud int
+    	UDP DNS Timeout (default 3)
+
+ For stat,log,sess modes
+  -d string
+    	Field delimiter
+  -n	No header.tupples only
+
+ For sum,stat modes
+  -i int
+    	reflesh interval (default 1)
+
+ For sum mode
+  -h int
+    	Summary table height (default 30)
+`
+    fmt.Fprintf(os.Stderr, "%s\n", usageTxt)
+  }
 	opt.mode = flag.String("m", "sum", "Mode [sum|stat|log|sess]")
 
 	opt.srcIP = flag.String("s", "", "Source ip address")

@@ -30,7 +30,15 @@ $ tcpdump -i eth0 -l -w - 'ip6' | ~/go/bin/4o6top -s xxx.xxx.xxx.xxx -h 30 -Tt 6
 ### option
 
 ```
-Usage of ./4o6top:
+Usage: 4o6top [option]
+
+  -m string
+    	Mode [sum|stat|log|sess] (default "sum")
+  -r string
+    	Read pcap file (default "-")
+  -s string
+    	Source ip address
+
   -Ti int
     	ICMP Timeout (default 3)
   -Tt int
@@ -41,19 +49,19 @@ Usage of ./4o6top:
     	UDP Timeout (default 60)
   -Tud int
     	UDP DNS Timeout (default 3)
+
+ For stat,log,sess modes
   -d string
-    	Field delimiter(stat,log,sess) (default ",")
-  -h int
-    	Summary table height(sum) (default 30)
+    	Field delimiter
+  -n	No header.tupples only
+
+ For sum,stat modes
   -i int
-    	reflesh interval(sum,stat) (default 1)
-  -m string
-    	Mode [sum|stat|log|sess] (default "sum")
-  -n	No header.tupples only(stat,log,sess)
-  -r string
-    	Read pcap file (default "-")
-  -s string
-    	Source ip address
+    	reflesh interval (default 1)
+
+ For sum mode
+  -h int
+    	Summary table height (default 30)
 ```
 
 ### mode
