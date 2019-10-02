@@ -15,11 +15,12 @@ import (
 	"time"
 )
 
-// Version of PROG
-var Version = "0"
 
 // Name of PROG
 var Name = "4o6top"
+
+// Version of PROG
+var Version = "0.4"
 
 // Options struct for option
 type Options struct {
