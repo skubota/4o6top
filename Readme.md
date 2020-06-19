@@ -33,7 +33,7 @@ $ tcpdump -i eth0 -l -w - 'ip6' | ~/go/bin/4o6top -s xxx.xxx.xxx.xxx -h 30 -Tt 6
 Usage: 4o6top [option]
 
   -m string
-    	Mode [sum|stat|log|sess] (default "sum")
+    	Mode [sum|stat|log|sess|elastic] (default "sum")
   -r string
     	Read pcap file (default "-")
   -s string
@@ -62,6 +62,10 @@ Usage: 4o6top [option]
  For sum mode
   -h int
     	Summary table height (default 30)
+
+ For elastic mode
+  -E string
+	Elastic Endpoint
 ```
 
 ### mode

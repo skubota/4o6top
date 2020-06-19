@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/olivere/elastic"
 	"io"
 	"log"
 	"os"
@@ -35,6 +37,36 @@ type Options struct {
 	timeOutUDPDns *int
 	timeOutICMP   *int
 	noheader      *bool
+	endpoint      *string
+}
+
+// ELstat structure
+type ELstat struct {
+	Mode         string `json:"mode"`
+	Timestamp    string `json:"timestamp"`
+	TotalSession int    `json:"total_session"`
+	TCPSession   int    `json:"tcp_session"`
+	UDPSession   int    `json:"udp_session"`
+	ICMPSession  int    `json:"icmp_session"`
+	TCPSrcPort   int    `json:"tcp_src_port"`
+	UDPSrcPort   int    `json:"udp_src_port"`
+	ICMPID       int    `json:"icmp_id"`
+	TCPDstIP     int    `json:"tcp_dst_ip"`
+	UDPDstIP     int    `json:"udp_dst_ip"`
+	ICMPDstIP    int    `json:"icmp_dst_ip"`
+	TCPDstPort   int    `json:"tcp_dst_port"`
+	UDPDstPort   int    `json:"udp_dst_port"`
+}
+
+// ELsess structure
+type ELsess struct {
+	Mode                 string `json:"mode"`
+	Timestamp            string `json:"timestamp"`
+	Protocol             string `json:"protocol"`
+	SourceIpAddress      string `json:"source_ip_address"`
+	SourcePort           int    `json:"source_port"`
+	DestinationIpAddress string `json:"destination_ip_address"`
+	DestinationPort      int    `json:"destination_port"`
 }
 
 // session gloval var map
@@ -124,6 +156,48 @@ func printSessionTable(opt Options) {
 		fmt.Printf("%d%s", len(dstport["UDP"]), d)
 		fmt.Printf("\n")
 	}
+	// elastic mode
+	if m == "elastic" {
+		t := time.Now()
+		// Create an index.
+		indexName := fmt.Sprintf("4o6top-%s", time.Now().Format("2006-01-02"))
+		// context
+		ctxb := context.Background()
+
+		// connect ES
+		bulk := connectToElastic(*opt.endpoint).
+			Bulk().
+			Index(indexName).
+			Type("stat")
+		id := fmt.Sprintf("%s", t.Format(time.RFC3339))
+
+		if bulk == nil {
+			log.Fatalf("Error: HandleRequest() connectToElastic")
+		}
+
+		doc := &ELstat{
+			Mode:         "stat",
+			Timestamp:    t.Format(time.RFC3339),
+			TotalSession: sessions,
+			TCPSession:   len(session["TCP"]),
+			UDPSession:   len(session["UDP"]),
+			ICMPSession:  len(session["ICMP"]),
+			TCPSrcPort:   len(srcport["TCP"]),
+			UDPSrcPort:   len(srcport["UDP"]),
+			ICMPID:       len(srcport["ICMP"]),
+			TCPDstIP:     len(dstip["TCP"]),
+			UDPDstIP:     len(dstip["UDP"]),
+			ICMPDstIP:    len(dstip["ICMP"]),
+			TCPDstPort:   len(dstport["TCP"]),
+			UDPDstPort:   len(dstport["UDP"]),
+		}
+		bulk.Add(elastic.NewBulkIndexRequest().Doc(doc).Id(id))
+		if _, err := bulk.Do(ctxb); err != nil {
+			log.Fatalf("Error: HandleRequest() bulk.Do %s", err)
+		}
+
+	}
+
 	sess.Range(func(k, v interface{}) bool {
 		var pkt int64
 		var byte int64
@@ -267,16 +341,35 @@ func capturePacket(packet gopacket.Packet, opt Options) {
 	}
 }
 
+// connect ESS
+func connectToElastic(endpoint string) *elastic.Client {
+	if len(endpoint) > 0 {
+		for i := 0; i < 3; i++ {
+			elasticClient, err := elastic.NewClient(
+				elastic.SetURL(endpoint),
+				elastic.SetSniff(false),
+			)
+			if err != nil {
+				log.Fatalf("Error: connectToElastic() elastic.NewClient %s", err)
+				//time.Sleep(3 * time.Second)
+			} else {
+				return elasticClient
+			}
+		}
+	}
+	return nil
+}
+
 // main func
 func main() {
 	opt := new(Options)
 
-  flag.Usage = func() {
-    usageTxt := `
+	flag.Usage = func() {
+		usageTxt := `
 Usage: 4o6top [option]
 
   -m string
-    	Mode [sum|stat|log|sess] (default "sum")
+    	Mode [sum|stat|log|sess|elastic] (default "sum")
   -r string
     	Read pcap file (default "-")
   -s string
@@ -305,10 +398,15 @@ Usage: 4o6top [option]
  For sum mode
   -h int
     	Summary table height (default 30)
+
+ For elastic mode
+  -E string
+	Elastic Endpoint
 `
-    fmt.Fprintf(os.Stderr, "%s\n", usageTxt)
-  }
+		fmt.Fprintf(os.Stderr, "%s\n", usageTxt)
+	}
 	opt.mode = flag.String("m", "sum", "Mode [sum|stat|log|sess]")
+	opt.endpoint = flag.String("E", "localhost", "Elastic Endpoint")
 
 	opt.srcIP = flag.String("s", "", "Source ip address")
 	opt.pcapFile = flag.String("r", "-", "Read pcap file")
